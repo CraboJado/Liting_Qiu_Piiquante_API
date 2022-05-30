@@ -1,5 +1,6 @@
 const express = require('express');
-const userRoutes = require('./routes/user')
+const userRoutes = require('./routes/user');
+const sauceRoutes = require('./routes/sauce');
 const app = express();
 
 // parse req.body
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
 })
 
 app.use('/api/auth',userRoutes);
+app.use('/api/sauces',sauceRoutes);
 // console.log(typeof app);
 // console.log(app.toString());
 
