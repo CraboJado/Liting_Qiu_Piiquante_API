@@ -1,29 +1,29 @@
 const express = require('express');
-const multer = require('../middlewares/multer');
+const multer = require('../middlewares/multer-config');
+const sauceCtrl = require('../controllers/sauce');
+const auth = require('../middlewares/auth');
 const router = express.Router();
 
-router.get('/',(req,res,next)=>{
-    res.status(200).json({response:' get Array of sauces'})
-})
 
-router.get('/:id',(req,res,next)=>{
-    res.status(200).json({response:' get sauces of id'})
-})
+router.get('/',sauceCtrl.getAllSauces)
 
-router.post('/',multer,(req,res,next)=>{
-    console.log('%O', req.body);
-    res.status(201).json({response:'  sauces created'})
-})
+router.get('/:id',sauceCtrl.getSauce)
 
-router.put('/:id',(req,res,next)=>{
-    res.status(200).json({response:'  sauce of id updated'})
-})
+// router.post('/',multer,auth,sauceCtrl.createSauce);
+router.post('/',auth,multer,sauceCtrl.createSauce);
 
-router.delete('/:id',(req,res,next)=>{
+// router.put('/:id',multer,auth,sauceCtrl.modifySauce);
+router.put('/:id',auth,multer,sauceCtrl.modifySauce);
+
+// router.delete('/:id',multer,auth,(req,res,next)=>{
+//     res.status(200).json({response:'  sauce of id deleted'})
+// })
+
+router.delete('/:id',auth, multer, (req,res,next)=>{
     res.status(200).json({response:'  sauce of id deleted'})
 })
 
-router.post('/:id/like',(req,res,next)=>{
+router.post('/:id/like',multer,auth,(req,res,next)=>{
     res.status(200).json({response:' like sauce of id '})
 })
 

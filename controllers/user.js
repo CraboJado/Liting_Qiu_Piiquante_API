@@ -1,12 +1,12 @@
-const UserModel = require('../models/user');
+const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 exports.signup = (req, res, next)=>{
-
+    console.log(req.body);
     bcrypt.hash(req.body.password,10)
         .then( hash => {
-            const user = new UserModel({
+            const user = new User({
               email:req.body.email,
               password:hash
             })
@@ -21,7 +21,7 @@ exports.signup = (req, res, next)=>{
 
 exports.login = (req, res, next) => {
 
-    UserModel.findOne({email:req.body.email})
+    User.findOne({email:req.body.email})
     .then( user => {
         // if user not existe, user = null
         if( !user ) {
@@ -37,7 +37,7 @@ exports.login = (req, res, next) => {
                 return
             }
             // when result is true, generate un token, send back to frontend
-            const token = jwt.sign( { data: user._id }, process.env.TOKEN_SECRET, { expiresIn: '24h' });
+            const token = jwt.sign( { data: user._id }, process.env.TOKEN_SECRET, { expiresIn: '12h' });
             res.status(200).json({ userId: user._id, token })
         })
         .catch( error => res.status(500).json({ error }) ) // dans 'les bonne pratiques', ne jamais envoyer ce code , donc, que fait ?
