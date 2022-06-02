@@ -28,7 +28,9 @@ const auth = (req, res, next) => {
         // console.log(req.body.userId);
         // console.log(req);
         // console.log(req.body);
-        if(req.body.userId && req.body.userId !== req.auth.userId || !req.body.userId ) return res.status(403).json({ message: 'unauthorized request' })
+        if(req.body.userId && req.body.userId !== req.auth.userId || !req.body.userId ){
+          return res.status(403).json({ message: 'unauthorized request' })
+        }
 
         next();
       } catch( error ) {
