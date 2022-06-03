@@ -1,45 +1,37 @@
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
-
     try {
+        console.log('**************** in auth step****************');
+        console.log('-----> request contente-type ',req.get('Content-Type'));
+
         // when token is missing
         if(!req.headers.authorization){
-          return res.status(403).json({error : 'unauthorized, token missing'})
+          return res.status(403).json({error : 'unauthorized request, token missing'})
         }
 
         // when there is token
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
         req.auth = { userId : decodedToken.data };
-        console.log('auth ***************************req.body');
-        console.log(req.body);
-        console.log(req.file);
-        console.log(req.body.sauce);
-
-        // when multer before auth
+   
         /*
-         no matter file exists or not, need to JSON.parse(req.body.sauce)
+        when data format is application/json, we can access to req.body to get userId
+        it runs to the authentication 
         */
-        //  const body = JSON.parse(req.body.sauce);
-        // if( body.userId && body.userId !== req.auth.userId || !body.userId) return res.status(403).json({ message: 'unauthorized request' })
-        
-        // when auth before multer, in this case, i can't handle the case of undefined, otherwise, it will stop always at 'unauthorized request'
-        // console.log(req.body.userId);
-        // console.log(req);
-        // console.log(req.body);
-        if(req.body.userId && req.body.userId !== req.auth.userId || !req.body.userId ){
-          return res.status(403).json({ message: 'unauthorized request' })
+        if(req.body.userId && req.body.userId !== req.auth.userId){
+          return res.status(403).json({ error: 'unauthorized request, userId invalid vs token' })
         }
-
-        next();
-      } catch( error ) {
         /*
-        when no token , req.headers.authorization is undefined 
-        when token is expired
-        when token is invalid 
-        */
-        res.status(400).json({ errorAuth : error })
+        when data format is multipart/form-data, the req.body is always empty {},because multer is not active at this step, 
+        it runs to next(), and file will be uploaded in multer middleware
+        so need to check the authentication again in controller middleware and delete uploaded file if user is unauthenticated
+        */ 
+        next();
+
+      } catch( error ) {
+        // when token is expired , when token is invalid 
+        res.status(403).json({ error })
       }
     
 }
