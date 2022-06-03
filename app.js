@@ -2,16 +2,16 @@ const express = require('express');
 const path = require('path');
 const userRoutes = require('./routes/user');
 const sauceRoutes = require('./routes/sauce');
-// const bodyParser = require('body-parser');
 
 const app = express();
-// parse req.body
+
+// parse req.body for JSON format
 app.use(express.json());
-// app.use(bodyParser.json());
+// parse req.body for urlencoded format
+app.use(express.urlencoded({ extended: true }));
 
 // serve static files
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // handle cors problem
 app.use((req, res, next) => {
