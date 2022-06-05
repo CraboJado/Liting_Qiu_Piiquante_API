@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
 
         // when token is missing
         if(!req.headers.authorization){
-          return res.status(403).json({error : 'unauthorized request, token missing'})
+          return res.status(401).json({error : 'unauthorized request, token missing'})
         }
 
         // when there is token
@@ -20,7 +20,7 @@ const auth = (req, res, next) => {
         it runs to the authentication 
         */
         if(req.body.userId && req.body.userId !== req.auth.userId){
-          return res.status(403).json({ error: 'unauthorized request, userId invalid vs token' })
+          return res.status(401).json({ error: 'unauthorized request, userId invalid vs token' })
         }
         /*
         when data format is multipart/form-data, the req.body is always empty {},because multer is not active at this step, 
@@ -31,7 +31,7 @@ const auth = (req, res, next) => {
 
       } catch( error ) {
         // when token is expired , when token is invalid 
-        res.status(403).json({ error })
+        res.status(401).json({ error })
       }
     
 }
