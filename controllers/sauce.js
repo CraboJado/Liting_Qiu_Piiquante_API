@@ -25,7 +25,7 @@ exports.createSauce = (req, res, next) => {
         fs.unlink(imageFilePath, ( error ) => {
             if (error) throw error; // est ce que ca plante le serveur
         })
-        return res.status(403).json({error:' unauthorize request, userId missing or userId invalid vs Token'})
+        return res.status(401).json({error:' unauthorize request, userId missing or userId invalid vs Token'})
     }
    
     const sauce = new Sauce ({
@@ -57,31 +57,32 @@ exports.modifySauce = (req, res, next) => {
 
     if(body.userId !== req.auth.userId) {
         if(!req.file) {
-            return res.status(403).json({ error: 'unauthorized request without file, userId missing or invalid' })
+            return res.status(401).json({ error: 'unauthorized request without file, userId missing or invalid' })
         }
         // uploaded file by unauthenticated user, need to unlink from server
         const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
         fs.unlink(imageFilePath, ( error ) => {
             if (error) throw error; // est ce que ca plante le serveur
-            return res.status(403).json({error:' unauthorize request with file, userId missing or userId invalid vs Token'})
+            return res.status(401).json({error:' unauthorize request with file, userId missing or userId invalid vs Token'})
         });
         return   
     }
 
     // when runs here, user is authenticated to modify
     if(!req.file) {
-        Sauce.updateOne({ _id:req.params.id },{ ...body })
+        // Sauce.updateOne({ _id:req.params.id, userId:req.auth.userId },{ ...body }) , est ce que c'est mieux ?
+        Sauce.updateOne({ _id:req.params.id},{ ...body })
             .then( () => res.status(201).json({ message:'sauce updated without file'}))
             .catch( error => res.status(500).json({ error }))
         return
     }
-
-    Sauce.findOneAndUpdate({ _id:req.params.id },{ ...body },{ returnDocument :'before' })
+ // Sauce.findOneAndUpdate({ _id:req.params.id, userId:req.auth.userId },{ ...body },{ returnDocument :'before' })
+    Sauce.findOneAndUpdate({ _id:req.params.id},{ ...body },{ returnDocument :'before' })
         .then( sauce => {
             const imageFilename = sauce.imageUrl.split('/images/')[1];
             const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
             fs.unlink(imageFilePath, error => {
-                if (error) throw error; // est ce que ca plante le serveur ?
+                if (error) throw error; // est ce que ca plante le serveur ? sinon new Erroe() ? l'erreur pass par où?
                 return res.status(201).json({ message:'sauce modified with updated file' })
             })
         })
@@ -89,5 +90,24 @@ exports.modifySauce = (req, res, next) => {
 }
 
 exports.deleteSauce = (req, res, next) => {
-    res.status(200).json({ message:'sauce deleted' })
+    console.log('************ in deleteSauce controller **************');
+    console.log('----> id----', req.params.id);
+
+    Sauce.findOneAndDelete({ _id:req.params.id,userId:req.auth.userId})
+    .then( sauce => {
+        console.log('--- sauce ----',sauce);
+        // if ( sauce === null) {
+        //     // return res.status(401).json({ error:'requete non autorisé, userId invalid vs Token' })
+        // }
+        const imageFilename = sauce.imageUrl.split('/images/')[1];
+        const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
+        fs.unlink(imageFilePath, error => {
+            if (error) throw error; // est ce que ca plante le serveur ?
+            return res.status(201).json({ message:'sauce deleted and file deleted from server' })
+        })
+    })
+    .catch( (error) => res.status(400).json({ error: 'bad request' + error }))
+
+
 }
+
