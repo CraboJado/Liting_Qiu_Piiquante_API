@@ -92,10 +92,13 @@ exports.modifySauce = (req, res, next) => {
 exports.deleteSauce = (req, res, next) => {
     console.log('************ in deleteSauce controller **************');
     console.log('----> id----', req.params.id);
+    console.log('---> req.auth.userId',req.auth.userId)
 
     Sauce.findOneAndDelete({ _id:req.params.id,userId:req.auth.userId})
     .then( sauce => {
         console.log('--- sauce ----',sauce);
+        console.log('----> sauce._id----', sauce._id);
+        console.log('---> sauce.userId',sauce.userId)
         // if ( sauce === null) {
         //     // return res.status(401).json({ error:'requete non autorisé, userId invalid vs Token' })
         // }
@@ -109,5 +112,112 @@ exports.deleteSauce = (req, res, next) => {
     .catch( (error) => res.status(400).json({ error: 'bad request' + error }))
 
 
+}
+
+
+exports.likeSauce = (req, res, next) => {
+    console.log('*********** in likeSauce controller ******')
+    
+    console.log('------->req.body----',req.body);
+    const { like, userId } = req.body;
+
+    Sauce.findOne({ _id : req.params.id })
+    .then ( sauce => {
+        if(!sauce) throw 'bad request, sauce can not find'
+
+        if(like === 1) {
+            console.log('------> Like',like);
+            console.log('------> Sauce before change',sauce);
+            const isLiked = sauce.usersLiked.find( element => element === userId);
+            const isDisliked = sauce.usersDisliked.find( element => element === userId);
+
+            if (!isDisliked && !isLiked) {
+                sauce.likes++;
+                sauce.usersLiked.push(userId);
+                console.log('------> Sauce After change',sauce);
+            }
+
+            if (isLiked){
+                throw 'you already Liked the sauce, you should cancle your like before disliking';
+            }
+
+            if (isDisliked){
+                throw 'you already Disliked the sauce,you should cancle your dislike before liking';
+            }
+        }
+    
+        if(like === -1) {
+            console.log('------> Like',like);
+            console.log('------> Sauce before change',sauce);
+            const isLiked = sauce.usersLiked.find( element => element === userId );
+            const isDisliked = sauce.usersDisliked.find( element => element === userId );
+
+            if(!isDisliked && !isLiked){
+                sauce.dislikes++;
+                sauce.usersDisliked.push(userId);
+                console.log('------> Sauce After change',sauce);
+            }
+
+            if (isLiked){
+                throw 'you already Liked the sauce, you should cancle your like before disliking';
+            }
+
+            if (isDisliked){
+                throw 'you already Disliked the sauce,you should cancle your dislike before liking';
+            }
+        }
+    
+        if(like === 0) {
+            console.log('------> Like',like);
+            console.log('------> Sauce before change',sauce);
+            const isLiked = sauce.usersLiked.find( element => element === userId);
+            const isDisliked = sauce.usersDisliked.find( element => element === userId);
+
+            if(isLiked && !isDisliked){
+                sauce.likes = (sauce.likes === 0) ? 0 : --sauce.likes;
+                sauce.usersLiked = sauce.usersLiked.filter( element => element !== userId);
+                console.log('userId is in usersLiked array, user cancle like');
+                console.log('------> Sauce After change',sauce);
+                
+            }
+
+            if(isDisliked && !isLiked){
+                sauce.dislikes = (sauce.dislikes === 0) ? 0 : --sauce.dislikes;
+                sauce.usersDisliked = sauce.usersDisliked.filter( element => element !== userId);
+                console.log('userId is in usersDislike array, user cancle dislike');
+                console.log('------> Sauce After change',sauce);
+            }
+
+            if(!isLiked && !isDisliked){
+                throw 'bad requst, you should like or dislike a sauce before cancling'
+            }
+        }
+
+        return sauce
+    })
+    .then( sauce => {
+        console.log('sauce return from uper then',sauce);
+        console.log('like from uper then',like);
+        const updateObj = {
+            likes: sauce.likes,
+            dislikes: sauce.dislikes,
+            usersLiked: sauce.usersLiked,
+            usersDisliked: sauce.usersDisliked,
+        }
+        Sauce.updateOne({_id : req.params.id},{...updateObj})
+        .then(() => {
+            if(like === 1) {
+                res.status(201).json({ message:'you like sauce' })
+            }
+            if(like === -1) {
+                res.status(201).json({ message:'you dislike sauce' })
+            }
+            if(like === 0) {
+                res.status(201).json({ message:'your cancle is done' })
+            } 
+        })
+        .catch( error => res.status(500).json({ errorupdateOne: error}))
+    })
+    .catch ( error => res.status(500).json({ errorFindOne : error}))
 }
 
