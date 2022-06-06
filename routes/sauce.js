@@ -19,12 +19,9 @@ router.put('/:id',auth,multer,sauceCtrl.modifySauce);
 //     res.status(200).json({response:'  sauce of id deleted'})
 // })
 
-router.delete('/:id',auth, multer, (req,res,next)=>{
-    res.status(200).json({response:'  sauce of id deleted'})
-})
+router.delete('/:id', auth, multer, sauceCtrl.deleteSauce)
 
-router.post('/:id/like',multer,auth,(req,res,next)=>{
-    res.status(200).json({response:' like sauce of id '})
-})
+router.post('/:id/like', auth, sauceCtrl.likeSauce)
+
 
 module.exports = router;
