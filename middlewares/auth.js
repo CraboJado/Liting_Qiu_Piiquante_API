@@ -31,7 +31,7 @@ const auth = (req, res, next) => {
 
       } catch( error ) {
         // when token is expired , when token is invalid 
-        res.status(401).json({ error })
+        res.status(401).json({ error }) // le front freezz
       }
     
 }
