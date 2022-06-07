@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 exports.signup = (req, res, next)=>{
     console.log('----- in signup controller-----');
     console.log('----req.body-----', req.body);
-    // bug : user can signup with invalide email like 333@hotmail or 333hotmail
+    // bug : user can signup with invalid email like 333@hotmail or 333hotmail
     const { email, password } = req.body;
     const emailRegex = /^[0-9a-z._-\s]+[+0-9a-z._-]*@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,5}\s*$/; 
     if(!emailRegex.test(email)){
