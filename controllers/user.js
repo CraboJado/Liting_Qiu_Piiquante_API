@@ -33,24 +33,20 @@ exports.login = (req, res, next) => {
 
     User.findOne({email:req.body.email})
     .then( user => {
-        // if user not existe, user = null
-        if( !user ) {
-            res.status(400).json({message : 'utilisatuer n\'existe pas'})
-            return
-        }
+        // if user not exist, user = null
+        if( !user ) return res.status(400).json({message : 'user not exist'})
+        
         // when user exist , then check password 
         bcrypt.compare(req.body.password,user.password)
         .then( result => {
             // when result is false
-            if ( !result ) {
-                res.status(401).json({message : 'mot de pass incorrect'});
-                return
-            }
+            if ( !result ) return res.status(401).json({message : 'password invalid'});
+
             // when result is true, generate un token, send back to frontend
             const token = jwt.sign( { data: user._id }, process.env.TOKEN_SECRET, { expiresIn: '12h' });
             res.status(200).json({ userId: user._id, token })
         })
-        .catch( error => res.status(500).json({ error }) ) // dans 'les bonne pratiques', ne jamais envoyer ce code , donc, que fait ?
+        .catch( error => res.status(500).json({ error }) ) // QQ dans 'les bonne pratiques', ne jamais envoyer ce code , donc, que fait ?
 
     })
     .catch( error => res.status(500).json({ error }))
