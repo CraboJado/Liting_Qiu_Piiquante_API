@@ -5,7 +5,7 @@ const auth = (req, res, next) => {
         console.log('**************** in auth step****************');
         console.log('-----> request contente-type ',req.get('Content-Type'));
 
-        // when token is missing
+        // when authorization (token) is missing
         if(!req.headers.authorization){
           return res.status(401).json({error : 'unauthorized request, token missing'})
         }
