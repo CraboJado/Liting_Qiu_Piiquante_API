@@ -3,23 +3,33 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 exports.signup = (req, res, next)=>{
-    console.log(req.body);
-    bcrypt.hash(req.body.password,10)
+    console.log('----- in signup controller-----');
+    console.log('----req.body-----', req.body);
+    // bug : user can signup with invalide email like 333@hotmail or 333hotmail
+    const { email, password } = req.body;
+    const emailRegex = /^[0-9a-z._-\s]+[+0-9a-z._-]*@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,5}\s*$/; 
+    if(!emailRegex.test(email)){
+        return res.status(400).json({ error : 'bad request, format of email address invalid' })
+    }
+    // hash password
+    bcrypt.hash(password,10)
         .then( hash => {
             const user = new User({
-              email:req.body.email,
+              email,
               password:hash
             })
-  
+            
+            // save user in database
             user.save()
-            .then( () => res.status(201).json({message: 'utilisateur créé'}) )
-            .catch( error => res.status(400).json({ error }));
+            .then( () => res.status(201).json({message: 'user created'}) )
+            .catch( error => res.status(400).json({ error })); //QQ :status code 500 ?
         })
-        .catch( error => res.status(500).json({ error }))
-        
+        .catch( error => res.status(500).json({ error })) //QQ :status code 500 ?   
 }
 
+
 exports.login = (req, res, next) => {
+    console.log('----- in login controller-----');
 
     User.findOne({email:req.body.email})
     .then( user => {
