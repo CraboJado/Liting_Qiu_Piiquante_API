@@ -7,20 +7,19 @@ exports.getAllSauces = (req, res, next) => {
     Sauce.find()
         .then( sauces => res.status(200).json(sauces) )
         .catch( error => res.status(500).json({ error }) )
-
 }
 
 exports.createSauce = (req, res, next) => {
     console.log('***** in createSauce controller ******');
 
     if(!req.file) {
-        return res.status(400).json({error:'bad request, must upload a file'})
+        return res.status(400).json({error:'bad request, user must upload a file'})
     }
 
-    const userIdFromRequest = JSON.parse(req.body.sauce).userId
+    const { userId } = JSON.parse(req.body.sauce);
 
-    if(userIdFromRequest !== req.auth.userId){
-        // need to unlink the file uploaded 
+    if(userId !== req.auth.userId){
+        // need to unlink the file uploaded in server
         const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
         fs.unlink(imageFilePath, ( error ) => {
             if (error) throw error; // est ce que ca plante le serveur
@@ -36,14 +35,15 @@ exports.createSauce = (req, res, next) => {
         usersLiked : [],
         usersDisliked : [],
     })
+
     sauce.save()
     .then(() => res.status(201).json({ response:' sauce created ' }))
-    .catch( error => res.status(500).json({ error : error }) )
+    .catch( error => res.status(500).json({ error }) )
  
 }
 
 exports.getSauce = (req, res, next) => {
-    Sauce.findOne({_id :req.params.id })
+    Sauce.findOne({ _id :req.params.id })
         .then( sauce => res.status(200).json( sauce ))
         .catch( error => res.status(400).json( { error }) ) // pourquoi pas 500 ?
 }
@@ -113,7 +113,6 @@ exports.deleteSauce = (req, res, next) => {
 
 
 }
-
 
 exports.likeSauce = (req, res, next) => {
     console.log('*********** in likeSauce controller ******')
