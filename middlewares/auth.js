@@ -22,11 +22,13 @@ const auth = (req, res, next) => {
         if(req.body.userId && req.body.userId !== req.auth.userId){
           return res.status(401).json({ error: 'unauthorized request, userId invalid vs token' })
         }
+
         /*
         when data format is multipart/form-data, the req.body is always empty {},because multer is not active at this step, 
-        it runs to next(), and file will be uploaded in multer middleware
+        it runs to next() directly, and file will be uploaded in multer middleware
         so need to check the authentication again in controller middleware and delete uploaded file if user is unauthenticated
         */ 
+
         next();
 
       } catch( error ) {

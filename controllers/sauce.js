@@ -50,44 +50,111 @@ exports.getSauce = (req, res, next) => {
 
 exports.modifySauce = (req, res, next) => {
     console.log('************ in modifySauce controller **************');
-    const body = req.file ? {
-        ...JSON.parse(req.body.sauce), 
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : req.body ;
+    if(!req.file) {
+        console.log(req.body)
+        const { userId } = req.body;
+        if(!userId) return res.status(401).json({message:'unauthorized request, userId missing'});
 
-    if(body.userId !== req.auth.userId) {
-        if(!req.file) {
-            return res.status(401).json({ error: 'unauthorized request without file, userId missing or invalid' })
-        }
-        // uploaded file by unauthenticated user, need to unlink from server
+        Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
+        .then( (sauce) => {
+            console.log('no file in sauce',sauce);
+            if(!sauce.acknowledged ) throw 'sth is wrong'
+            if( sauce.matchedCount === 0 ) return res.status(400).json({ message: 'bad request,no matched document'});
+            res.status(201).json({ message:'sauce updated without comming-in file'})})
+        .catch( error => res.status(500).json({ error }));       
+        return
+    }
+
+    const { userId } = JSON.parse(req.body.sauce);
+    if(userId !== req.auth.userId) {
+        console.log('************ user is not authenticated **************');
         const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
         fs.unlink(imageFilePath, ( error ) => {
             if (error) throw error; // est ce que ca plante le serveur
-            return res.status(401).json({error:' unauthorize request with file, userId missing or userId invalid vs Token'})
+            return res.status(401).json({error:'unauthorized request with comming-in file, userId missing or invalid vs Token'})
         });
         return   
     }
-
-    // when runs here, user is authenticated to modify
-    if(!req.file) {
-        // Sauce.updateOne({ _id:req.params.id, userId:req.auth.userId },{ ...body }) , est ce que c'est mieux ?
-        Sauce.updateOne({ _id:req.params.id},{ ...body })
-            .then( () => res.status(201).json({ message:'sauce updated without file'}))
-            .catch( error => res.status(500).json({ error }))
-        return
+    // when runs here, means user is authenticated , allow to update sauce with coming-in file
+    console.log('************ user is authenticated **************');
+    const updateObj = {
+        ...JSON.parse(req.body.sauce),
+        imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     }
- // Sauce.findOneAndUpdate({ _id:req.params.id, userId:req.auth.userId },{ ...body },{ returnDocument :'before' })
-    Sauce.findOneAndUpdate({ _id:req.params.id},{ ...body },{ returnDocument :'before' })
-        .then( sauce => {
-            const imageFilename = sauce.imageUrl.split('/images/')[1];
-            const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
-            fs.unlink(imageFilePath, error => {
-                if (error) throw error; // est ce que ca plante le serveur ? sinon new Erroe() ? l'erreur pass par où?
-                return res.status(201).json({ message:'sauce modified with updated file' })
-            })
+    Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...updateObj },{ returnDocument :'before' })
+    .then( sauce => {
+        if(!sauce) {
+            const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
+            fs.unlink(imageFilePath, ( error ) => {
+                if (error) throw error; // est ce que ca plante le serveur
+                return res.status(400).json({ message: 'bad request,no matched document'});
+            });
+            return
+        } 
+        const imageFilename = sauce.imageUrl.split('/images/')[1];
+        const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
+        fs.unlink(imageFilePath, error => {
+            if (error) throw error; // est ce que ca plante le serveur ? sinon new Erroe() ? l'erreur pass par où?
+            return res.status(201).json({ message:'sauce modified with updated file' })
         })
-        .catch( error => res.status(400).json( { error }) )
+    })
+    .catch( error => res.status(500).json( { error }) )
+
 }
+
+// exports.modifySauce = (req, res, next) => {
+//     console.log('************ in modifySauce controller **************');
+//     // when req.file is undefined, data format is application/json, 
+//     // we can update directly, the authentication is done in auth.js
+
+//     if(!req.file) {
+//         console.log('************ no coming-in file **************');
+//         Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
+//         .then( (sauce) => {
+//             console.log('no file in sauce',sauce);
+//             if(!sauce.acknowledged ) throw 'sth is wrong'
+//             if( sauce.matchedCount === 0 ) return res.status(400).json({ message: 'bad request,no matched document'});
+//             res.status(201).json({ message:'sauce updated without comming-in file'})})
+//         .catch( error => res.status(500).json({ error }));
+//         return
+//     }
+    
+//     // when runs here, means file comming in, the data is multipart/form-data, 
+//     // need to verify authentication first
+//     console.log('************ have coming-in file **************');
+//     const { userId } = JSON.parse(req.body.sauce);
+    
+//     // unlink from server the uploaded file by unauthenticated user
+//     if(userId !== req.auth.userId) {
+//         console.log('************ user is not authenticated **************');
+//         const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
+//         fs.unlink(imageFilePath, ( error ) => {
+//             if (error) throw error; // est ce que ca plante le serveur
+//             return res.status(401).json({error:'unauthorized request with comming-in file, userId missing or invalid vs Token'})
+//         });
+//         return   
+//     }
+    
+//     // when runs here, means user is authenticated , allow to update sauce with coming-in file
+//     console.log('************ user is authenticated **************');
+    // const updateObj = {
+    //     ...JSON.parse(req.body.sauce),
+    //     imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    // }
+//     Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...updateObj },{ returnDocument :'before' })
+//     .then( sauce => {
+//         if(!sauce) return res.status(400).json({ message: 'bad request,no matched document'}); 
+//         const imageFilename = sauce.imageUrl.split('/images/')[1];
+//         const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
+//         fs.unlink(imageFilePath, error => {
+//             if (error) throw error; // est ce que ca plante le serveur ? sinon new Erroe() ? l'erreur pass par où?
+//             return res.status(201).json({ message:'sauce modified with updated file' })
+//         })
+//     })
+//     .catch( error => res.status(500).json( { error }) )
+
+// }
+
 
 exports.deleteSauce = (req, res, next) => {
     console.log('************ in deleteSauce controller **************');
@@ -97,11 +164,7 @@ exports.deleteSauce = (req, res, next) => {
     Sauce.findOneAndDelete({ _id:req.params.id,userId:req.auth.userId})
     .then( sauce => {
         console.log('--- sauce ----',sauce);
-        console.log('----> sauce._id----', sauce._id);
-        console.log('---> sauce.userId',sauce.userId)
-        // if ( sauce === null) {
-        //     // return res.status(401).json({ error:'requete non autorisé, userId invalid vs Token' })
-        // }
+        if ( !sauce ) return res.status(400).json({ error:'bad request, no matched document' });
         const imageFilename = sauce.imageUrl.split('/images/')[1];
         const imageFilePath = path.join(__dirname, `../public/images/${imageFilename}`);
         fs.unlink(imageFilePath, error => {
@@ -109,7 +172,7 @@ exports.deleteSauce = (req, res, next) => {
             return res.status(201).json({ message:'sauce deleted and file deleted from server' })
         })
     })
-    .catch( (error) => res.status(400).json({ error: 'bad request' + error }))
+    .catch( (error) => res.status(500).json({ error }))
 
 
 }
