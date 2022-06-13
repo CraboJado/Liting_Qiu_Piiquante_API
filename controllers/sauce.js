@@ -11,31 +11,29 @@ exports.getAllSauces = (req, res, next) => {
 
 exports.createSauce = (req, res, next) => {
     console.log('***** in createSauce controller ******');
-
     if(!req.file) {
-        return res.status(400).json({error:'bad request, user must upload a file'})
+        return res.status(400).json({error:'bad request, file is required'})
     }
 
     const { userId } = JSON.parse(req.body.sauce);
-
+    // when user is not autheticated, unlink the file uploaded in server
     if(userId !== req.auth.userId){
-        // need to unlink the file uploaded in server
         const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
         fs.unlink(imageFilePath, ( error ) => {
-            if (error) throw error; // est ce que ca plante le serveur
+            if (error) throw new Error('something is wrong');
+            res.status(401).json({ error:'unauthorized request '})
         })
-        return res.status(401).json({error:' unauthorize request, userId missing or userId invalid vs Token'})
+        return
     }
-   
-    const sauce = new Sauce ({
-        ...JSON.parse(req.body.sauce),
-        imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-        likes: 0,
-        dislikes: 0,
-        usersLiked : [],
-        usersDisliked : [],
-    })
 
+    const sauce = new Sauce ({
+            ...JSON.parse(req.body.sauce),
+            imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+            likes: 0,
+            dislikes: 0,
+            usersLiked : [],
+            usersDisliked : [],
+    });
     sauce.save()
     .then(() => res.status(201).json({ response:' sauce created ' }))
     .catch( error => res.status(500).json({ error }) )
@@ -44,8 +42,11 @@ exports.createSauce = (req, res, next) => {
 
 exports.getSauce = (req, res, next) => {
     Sauce.findOne({ _id :req.params.id })
-        .then( sauce => res.status(200).json( sauce ))
-        .catch( error => res.status(400).json( { error }) ) // pourquoi pas 500 ?
+        .then( sauce => {
+            if( !sauce ) return res.status(409).json({ error :'no matched document'})
+            res.status(200).json( sauce )
+        })
+        .catch( error => res.status(400).json( { error }) );
 }
 
 exports.modifySauce = (req, res, next) => {
@@ -86,7 +87,7 @@ exports.modifySauce = (req, res, next) => {
             const imageFilePath = path.join(__dirname, `../${req.file.path}`); 
             fs.unlink(imageFilePath, ( error ) => {
                 if (error) throw error; // est ce que ca plante le serveur
-                return res.status(400).json({ message: 'bad request,no matched document'});
+                res.status(409).json({ message: 'no matched document'});
             });
             return
         } 
