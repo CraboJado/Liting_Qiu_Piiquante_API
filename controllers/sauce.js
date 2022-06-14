@@ -43,42 +43,6 @@ exports.getAllSauces = (req, res, next) => {
         .catch( error => res.status(500).json({ error }) );
 }
  
-
-// exports.createSauce = (req, res, next) => {
-//     console.log('***** in createSauce controller ******');
-//     console.log('***** req.body ******',req.body);
-//     try {
-//         if(!req.file) return res.status(400).json({ error:'please provide a file' });
-//         const filePath = getFilePath(req.file.filename);
-//         if(!req.body.sauce) {
-//             unlinkFile(filePath);
-//             return res.status(400).json({ error:'bad request' });
-//         }
-//         const { userId } = JSON.parse(req.body.sauce);
-//         if(userId !== req.auth.userId){
-//             unlinkFile(filePath);
-//             return res.status(401).json({ error:'unauthorized request' });
-//         }
-//     } catch (error) {
-//         return res.status(500).json({ error: error.message });
-//     }
-
-//     const sauce = new Sauce ({
-//         ...JSON.parse(req.body.sauce),
-//         imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-//         likes: 0,
-//         dislikes: 0,
-//         usersLiked : [],
-//         usersDisliked : [],
-//     });
-//     sauce.save()
-//     .then(() => {
-//         res.status(201).json({ response:' sauce created successfully ' });
-//     })
-//     .catch( error => res.status(400).json({ error : error.message }) );
-   
-// }
-
 exports.createSauce = (req, res, next) => {
     console.log('***** in createSauce controller ******');
     try {
@@ -124,59 +88,59 @@ exports.getSauce = (req, res, next) => {
 exports.modifySauce = (req, res, next) => {
     console.log('************ in modifySauce controller **************');
     // if update without image file
-    if(!req.file) {
-        const { userId } = req.body; 
-        if( userId !== req.auth.userId ) 
-        return res.status(401).json({ error: 'unauthorized request' });
+    try{
+        if(!req.file) {
+                const { userId } = req.body; 
+                if( userId !== req.auth.userId ) 
+                return res.status(401).json({ error: 'unauthorized request' });
 
-        Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
-        .then( sauce => {
-            if(sauce.matchedCount === 0) 
-            return res.status(404).json({ error: 'no matched document'});
-            res.status(201).json({ message:'sauce updated successfully'});
-        })
-        .catch( error => res.status(400).json({ error }));
+                Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
+                .then( sauce => {
+                    if(sauce.matchedCount === 0) 
+                    return res.status(404).json({ error: 'no matched document'});
+                    res.status(201).json({ message:'sauce updated successfully'});
+                })
+            .catch( error => res.status(400).json({ error }));
         
-        return
-    }
-    // if update with image file
-    const filePath = getFilePath(req.file.filename);
-    if(!req.body.sauce){
-        unlinkFile(filePath);
-        return res.status(400).json({ error:'bad request' });
-    }
-
-    // authenticate user before updating sauce with coming-in file
-    const { userId } = JSON.parse(req.body.sauce);
-    req.filePath = getFilePath(req.file.filename);
-
-    if(userId !== req.auth.userId) {
-        unlinkFile(req,res);
-        return   
-    }
-
-    const updateObj = {
-        ...JSON.parse(req.body.sauce),
-        imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    };
-    Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...updateObj },{ returnDocument :'before' })
-    .then( sauce => {
-        if(!sauce) {
-            req.sauceIsNull = true;
-            unlinkFile(req,res);
             return
-        } 
-        const imageFilename = sauce.imageUrl.split('/images/')[1];
-        req.filePath = getFilePath(imageFilename);
-        unlinkFile(req,res);
-    })
-    .catch( error => {
-        fs.unlink(filePath, error => {
-            if (error) throw new Error('something is wrong');
-        })
-        res.status(400).json( { error });
-    });
+        }
+    // if update with image file
+        const filePath = getFilePath(req.file.filename);
+        if(!req.body.sauce){
+            unlinkFile(filePath);
+            return res.status(400).json({ error:'bad request' });
+        }
+        const { userId } = JSON.parse(req.body.sauce);
+        if(userId !== req.auth.userId) {
+            unlinkFile(filePath);
+            return res.status(401).json({ error: 'unauthorized request, invalid credentials' });   
+        }
 
+        const updateObj = {
+            ...JSON.parse(req.body.sauce),
+            imageUrl:`${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        };
+        Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...updateObj },{ returnDocument :'before' })
+        .then( sauce => {
+            if(!sauce) {
+                const filePath = getFilePath(req.file.filename);
+                unlinkFile(filePath);
+                return res.status(404).json({ error: 'no matched document'});
+            } 
+            const imageFilename = sauce.imageUrl.split('/images/')[1];
+            const filePath = getFilePath(imageFilename);
+            unlinkFile(filePath);
+            res.status(201).json({ message: 'sauce updated successfully'})
+        })
+        .catch( error => {
+            fs.unlink(filePath, error => {
+                if (error) throw new Error('something is wrong');
+            })
+             res.status(500).json( { error : error.message});
+         });
+    }catch (error) {
+        res.status(500).json({ error : error.message });
+    }
 }
 
 exports.deleteSauce = (req, res, next) => {
