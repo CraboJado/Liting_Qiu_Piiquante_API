@@ -1,4 +1,7 @@
 const http = require('http');
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 // import express app
@@ -11,9 +14,7 @@ dotenv.config();
 mongoose.connect(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.dkktm.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`)
   .then( ( ) => console.log('Successfully connect to mongoDB database '))
   .catch( ( error ) => console.log( error + 'Unsuccessfully connect to mongoDB database')) 
-  // QQ : dans le doc., handleError(error) , qu'est ce qu'on peut faire dans la fonction handleError
 
-// QQ : pourquoi normalizePort ? si je utilise diretement process.env.PORT || '3000', il aura quoi comme problem ?
 const normalizePort = val => {
     const port = parseInt(val, 10);
     if (isNaN(port)) {
@@ -29,9 +30,8 @@ const normalizePort = val => {
 
   const errorHandler = error => {
     if (error.syscall !== 'listen') {
-      throw error; // QQ : error pass par où ? la ligne 59 ?
+      throw error; 
     }
-    //console.log(address) output : null
     const address = server.address();
     const bind = typeof address === 'string' ? 'pipe ' + address : 'port: ' + port;
     switch (error.code) {
@@ -49,11 +49,20 @@ const normalizePort = val => {
     }
   };
 
-// app.set('port', process.env.PORT || 3000); 
-app.set('port', port); // QQ : pourquoi , car sans app.set('port'), ca marche aussi ???
+app.set('port', port); 
 
-// create a server node : http server and pass express app to handle incoming http request
-const server = http.createServer(app);
+// create a server node : https server and pass express app to handle incoming http request
+// https for production phase
+const server = https.createServer(
+  {
+  key:fs.readFileSync(path.join(__dirname,'certificate','key.pem')),
+  cert:fs.readFileSync(path.join(__dirname,'certificate','cert.pem'))
+  },
+  app
+);
+
+// http for development phase
+// const server = http.createServer(app)
 
 // handle http request event
 server.on('error',errorHandler);
@@ -64,7 +73,7 @@ server.on('listening', () => {
     console.log('Listening on ' + bind);
   });
 
-// server.listen(port);  // QQ : la différence par rapport à la ligne 68 ?
-server.listen(process.env.PORT || 3000);
+server.listen(port);  // QQ : la différence par rapport à la ligne 68 ?
+// server.listen(process.env.PORT || 3000);
 
 
