@@ -3,9 +3,7 @@ const path = require('path');
 const helmet = require('helmet')
 const userRoutes = require('./routes/user');
 const sauceRoutes = require('./routes/sauce');
-// const { errorHandler } = require('./middlewares/errorHandler');
 const errorHandler = require('./middlewares/error');
-
 
 const app = express();
 
@@ -33,4 +31,5 @@ app.use('/api/sauces',sauceRoutes);
 
 // handle error middleware
 app.use(errorHandler);
+
 module.exports = app;
