@@ -7,29 +7,6 @@ const getFilePath = (filename) => {
     return path.join(__dirname, `../public/images/${filename}`);
 }
 
-// const unlinkFile = (req, res) => {
-//     if(!req.body.sauce) {
-//         fs.unlink(req.filePath, ( error ) => {
-//             if (error) throw new Error('something is wrong')
-//             res.status(400).json({ error:'bad request' });
-//         })
-//         return
-//     }
-
-//     const{ userId } = JSON.parse(req.body.sauce);
-//     fs.unlink(req.filePath, error => {
-//         if (error) throw new Error('something is wrong'); 
-
-//         if(userId !== req.auth.userId) 
-//         return res.status(401).json({ error:'unauthorized request' });
-
-//         if(req.sauceIsNull)
-//         return res.status(404).json({ error: 'no matched document'});
-
-//         res.status(201).json({ message:'sauce updated successfully' });
-//     });
-// }
-
 const unlinkFile = (file) => {
     fs.unlink(file, err => {
         if(err) throw new Error('something is wrong, unlinking file fails');
@@ -90,16 +67,16 @@ exports.modifySauce = (req, res, next) => {
     // if update without image file
     try{
         if(!req.file) {
-                const { userId } = req.body; 
-                if( userId !== req.auth.userId ) 
-                return res.status(401).json({ error: 'unauthorized request' });
+            const { userId } = req.body; 
+            if( userId !== req.auth.userId ) 
+            return res.status(401).json({ error: 'unauthorized request' });
 
-                Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
-                .then( sauce => {
-                    if(sauce.matchedCount === 0) 
-                    return res.status(404).json({ error: 'no matched document'});
-                    res.status(201).json({ message:'sauce updated successfully'});
-                })
+            Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
+            .then( sauce => {
+                if(sauce.matchedCount === 0) 
+                return res.status(404).json({ error: 'no matched document'});
+                res.status(201).json({ message:'sauce updated successfully'});
+            })
             .catch( error => res.status(400).json({ error }));
         
             return
@@ -147,15 +124,13 @@ exports.deleteSauce = (req, res, next) => {
     console.log('************ in deleteSauce controller **************');
     Sauce.findOneAndDelete({ _id: req.params.id, userId: req.auth.userId })
     .then( sauce => {
-        if (!sauce) return res.status(409).json({ error:'no matched document' });
+        if (!sauce) return res.status(404).json({ error:'no matched document' });
         const imageFilename = sauce.imageUrl.split('/images/')[1];
         const filePath = getFilePath(imageFilename);
-        fs.unlink(filePath, error => {
-            if (error) throw new Error('something is wrong');
-        });
+        unlinkFile(filePath);
         res.status(201).json({ message:'sauce deleted successfully' });
     })
-    .catch( (error) => res.status(400).json({ error }));
+    .catch( (error) => res.status(400).json({ error : error.message}));
 }
 
 const likeHandler = (body, sauce) => {
