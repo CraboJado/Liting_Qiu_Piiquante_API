@@ -83,6 +83,7 @@ exports.createSauce = (req, res, next) => {
     console.log('***** in createSauce controller ******');
     try {
         if(!req.file) return res.status(400).json({ error:'please provide a file' });
+
         const filePath = getFilePath(req.file.filename);
         if(!req.body.sauce) {
             unlinkFile(filePath);
@@ -105,7 +106,7 @@ exports.createSauce = (req, res, next) => {
         .then(() => {
             res.status(201).json({ message:' sauce created successfully ' });
         })
-        .catch( error => { throw new Error('something is wrong, creating fails') });
+        .catch( error => res.status(500).json({ error : 'something is wrong, creating fails' }) );
     } catch (error) {
         res.status(500).json({error: error.message})
     }
@@ -122,24 +123,27 @@ exports.getSauce = (req, res, next) => {
 
 exports.modifySauce = (req, res, next) => {
     console.log('************ in modifySauce controller **************');
+    // if update without image file
     if(!req.file) {
         const { userId } = req.body; 
-        if(!userId) return res.status(401).json({ error: 'unauthorized request' });
+        if( userId !== req.auth.userId ) 
+        return res.status(401).json({ error: 'unauthorized request' });
 
         Sauce.updateOne({ _id: req.params.id, userId: req.auth.userId },{ ...req.body })
         .then( sauce => {
             if(sauce.matchedCount === 0) 
-            return res.status(409).json({ error: 'no matched document'});
+            return res.status(404).json({ error: 'no matched document'});
             res.status(201).json({ message:'sauce updated successfully'});
         })
         .catch( error => res.status(400).json({ error }));
+        
         return
     }
-
+    // if update with image file
+    const filePath = getFilePath(req.file.filename);
     if(!req.body.sauce){
-        req.filePath = getFilePath(req.file.filename);
-        unlinkFile(req,res);
-        return
+        unlinkFile(filePath);
+        return res.status(400).json({ error:'bad request' });
     }
 
     // authenticate user before updating sauce with coming-in file
