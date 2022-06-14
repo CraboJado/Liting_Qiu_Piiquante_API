@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/user')
+const User = require('../models/user');
+const ErrorResponse = require('../utils/errorResponse');
+
 
 const auth = (req, res, next) => {
     // try {
@@ -54,26 +56,23 @@ const auth = (req, res, next) => {
           token = req.headers.authorization.split(' ')[1];
         }
   
-        if(!token) throw new Error('unauthorized request, missing valid credentials ');
-        // return res.status(401).json({error : 'unauthorized request, invalid credentials'});
+        if(!token) {
+          return next(new ErrorResponse("unauthorized request, missing valid credentials",401))
+        }
 
         const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-        console.log('decodedToken.data',decodedToken.data);
         req.auth = { userId : decodedToken.data };
 
         User.findOne({ _id: decodedToken.data})
-        .then( user =>{
-            console.log('user',user);
-            if(!user) throw new Error('unauthorized request, invalid credentials');
+        .then( user => {
+            if(!user) return next(new ErrorResponse('unauthorized request, invalid credentials',401));
             next();
         })
-        .catch( error => { res.status(401).json({ error:error.message }) })
+        .catch( error => next(error) );
         
       } catch (error) {
-        res.status(401).json({ error:error.message })
+          next(error);
       }
-
-
 }
 
 module.exports = auth;
