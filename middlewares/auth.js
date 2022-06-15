@@ -22,6 +22,7 @@ const auth = (req, res, next) => {
 
         const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
         req.auth = { userId : decodedToken.data };
+        next();
         
       } catch (error) {
           next(error);
