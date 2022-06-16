@@ -52,17 +52,19 @@ const normalizePort = val => {
 app.set('port', port); 
 
 // create a server node : https server and pass express app to handle incoming http request
-// https for production phase
-const server = https.createServer(
-  {
-  key:fs.readFileSync(path.join(__dirname,'certificate','key.pem')),
-  cert:fs.readFileSync(path.join(__dirname,'certificate','cert.pem'))
-  },
-  app
-);
+let server 
+if(process.env.ENVIRONNEMENT == "prod") {
+   server = https.createServer(
+    {
+    key:fs.readFileSync(path.join(__dirname,'certificate','key.pem')),
+    cert:fs.readFileSync(path.join(__dirname,'certificate','cert.pem'))
+    },
+    app
+  );
+} else {
+   server = http.createServer(app);
+}
 
-// http for development phase
-// const server = http.createServer(app)
 
 // handle http request event
 server.on('error',errorHandler);
