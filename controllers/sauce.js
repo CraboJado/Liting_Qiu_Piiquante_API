@@ -181,23 +181,23 @@ exports.deleteSauce = (req, res, next) => {
     console.log('************ in deleteSauce controller **************');
     Sauce.findOneAndDelete({ _id: req.params.id, userId: req.auth.userId })
     .then( sauce => {
-        if (!sauce) return res.status(404).json({ error:'no matched document' });
+        if (!sauce) return next( new ErrorResponse('no matched query',404));
+
         const imageFilename = sauce.imageUrl.split('/images/')[1];
         const filePath = getFilePath(imageFilename);
-        unlinkFile(filePath);
+        unlinkFile(filePath,next);
         res.status(201).json({ message:'sauce deleted successfully' });
     })
-    .catch( (error) => res.status(400).json({ error : error.message}));
+    .catch( error => next(error) );
 }
 
 exports.likeSauce = (req, res, next) => {
     console.log('*********** in likeSauce controller ******')
     console.log('------->req.body----',req.body);
-    // const body = req.body;
-
+    
     Sauce.findOne({ _id : req.params.id })
     .then ( sauce => {
-        if(!sauce) throw new Error('bad request, no matched document');
+        if(!sauce) return next( new ErrorResponse('no matched query',404));
         likeHandler(req.body,sauce);
         const updateObj = {
             likes: sauce.likes,
@@ -221,9 +221,9 @@ exports.likeSauce = (req, res, next) => {
                 res.status(201).json({ message:'your cancle is done' })
             } 
         })
-        .catch( error => res.status(500).json({ error: error.message}))
+        .catch( error => next(error) )
     })
-    .catch( error => res.status(400).json( {message:error.message}))
+    .catch( error => next(error) )
         
 }
 
