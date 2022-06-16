@@ -8,7 +8,9 @@ const errorHandler = require('./middlewares/error');
 const app = express();
 
 // Security HTTP Headers
-app.use(helmet());
+if(process.env.ENVIRONNEMENT == "prod"){
+    app.use(helmet());
+}
 
 // parse req.body for JSON format
 app.use(express.json());
