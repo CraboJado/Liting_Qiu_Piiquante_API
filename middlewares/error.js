@@ -13,7 +13,7 @@ const errorHandler = (err, req, res, next) => {
     // in mongoose a error called "ValidationError"
     if(err.name === "ValidationError") {
         // err.errors we pass all the "errors" filed of the objet : err
-        // Object.values(err.errors) returns an array, we map it 
+        // Object.values(err.errors) returns an array
         const message = Object.values(err.errors).map( (val) => val.message);
         error = new ErrorResponse(message,400);
     }
