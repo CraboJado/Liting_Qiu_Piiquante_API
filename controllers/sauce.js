@@ -51,6 +51,37 @@ const likeHandler = (body, sauce) => {
 
 }
 
+const updateHandler = (req,res,next) => {
+    let filePath
+    Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...req.body },{ returnDocument :'before' })
+    .then( sauce => {
+        if(!sauce && !req.file) {
+            return next( new ErrorResponse('no matched query',404))
+        } 
+
+        if(!sauce && req.file){
+            filePath =  getFilePath(req.file.filename);
+            unlinkFile(filePath,next);
+            return next( new ErrorResponse('no matched query',404))
+        }
+
+        if(req.file){
+            const imageFilename = sauce.imageUrl.split('/images/')[1];
+            filePath = getFilePath(imageFilename);
+            unlinkFile(filePath,next);
+        }
+        
+        res.status(201).json({ message: 'sauce updated successfully'})
+    })
+    .catch( error => {
+        if(req.file) {
+            filePath =  getFilePath(req.file.filename);
+            unlinkFile(filePath,next)
+        }
+        next(error);
+     });
+}
+
 exports.getAllSauces = (req, res, next) => {
     Sauce.find()
         .then( sauces => res.status(200).json(sauces) )
@@ -101,37 +132,6 @@ exports.getSauce = (req, res, next) => {
             res.status(200).json( sauce );
         })
         .catch( error => next(error) );
-}
-
-const updateHandler = (req,res,next) => {
-    let filePath
-    Sauce.findOneAndUpdate({ _id:req.params.id, userId: req.auth.userId },{ ...req.body },{ returnDocument :'before' })
-    .then( sauce => {
-        if(!sauce && !req.file) {
-            return next( new ErrorResponse('no matched query',404))
-        } 
-
-        if(!sauce && req.file){
-            filePath =  getFilePath(req.file.filename);
-            unlinkFile(filePath,next);
-            return next( new ErrorResponse('no matched query',404))
-        }
-
-        if(req.file){
-            const imageFilename = sauce.imageUrl.split('/images/')[1];
-            filePath = getFilePath(imageFilename);
-            unlinkFile(filePath,next);
-        }
-        
-        res.status(201).json({ message: 'sauce updated successfully'})
-    })
-    .catch( error => {
-        if(req.file) {
-            filePath =  getFilePath(req.file.filename);
-            unlinkFile(filePath,next)
-        }
-        next(error);
-     });
 }
 
 exports.modifySauce = (req, res, next) => {
@@ -193,11 +193,9 @@ exports.deleteSauce = (req, res, next) => {
 
 exports.likeSauce = (req, res, next) => {
     console.log('*********** in likeSauce controller ******')
-    console.log('------->req.body----',req.body);
-    
     Sauce.findOne({ _id : req.params.id })
     .then ( sauce => {
-        if(!sauce) return next( new ErrorResponse('no matched query',404));
+        if(!sauce) return Promise.reject(new ErrorResponse('no matched query111',404));
         likeHandler(req.body,sauce);
         const updateObj = {
             likes: sauce.likes,
