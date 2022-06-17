@@ -2,7 +2,6 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
-const mongoose = require('mongoose');
 const app = require('./app');
 const connectMongoDB = require('./config/db')
 const dotenv = require('dotenv');
