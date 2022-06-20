@@ -4,15 +4,14 @@ const jwt = require('jsonwebtoken');
 const ErrorResponse = require('../utils/errorResponse');
 
 exports.signup = (req, res, next)=>{
-    console.log('----- in signup controller-----');
     const { email, password } = req.body;
     // hash password
     bcrypt.hash(password,10)
         .then( hash => {
             const user = new User({
-                            email,
-                            password:hash
-                        });
+                        email,
+                        password:hash
+                    });
             user.save()
             .then( () => res.status(201).json({ message: 'user created' }) )
             .catch( error => next(error) ); 
@@ -22,7 +21,6 @@ exports.signup = (req, res, next)=>{
 
 
 exports.login = (req, res, next) => {
-    console.log('----- in login controller-----');
     User.findOne({ email: req.body.email })
     .then( user => {
         if( !user ) return next(new ErrorResponse('user does not exist',404));
@@ -40,6 +38,5 @@ exports.login = (req, res, next) => {
         .catch( error => next(error) ) 
     })
     .catch( error => next(error) )
-
 }
 
