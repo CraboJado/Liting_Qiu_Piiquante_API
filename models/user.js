@@ -8,17 +8,16 @@ const userSchema = new Schema({
         required:[true,"Email required"], 
         unique:true,
         trim:true,
-        match:[/^.+@(?:[\w-]+\.)+\w+$/, 'Please fill a valid email address'],
+        match:[/^.[^éèçàµù@"()\[\]\\<>,;:]+@(?:[\w-]+\.)+\w+$/, 'Please fill a valid email address'],
         lowercase:true
     },
     password: { 
         type: String, 
         required:[true,"password required"]
     }
-})
+});
 
-
-// validator for fileds declared unique :true
+// validator for fileds declared {unique :true}
 userSchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model('User',userSchema);
