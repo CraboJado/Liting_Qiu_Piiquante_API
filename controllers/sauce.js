@@ -128,7 +128,7 @@ exports.createSauce = (req, res, next) => {
 exports.getSauce = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
         .then( sauce => {
-            if( !sauce ) return next( new ErrorResponse('no matched query',409) );
+            if( !sauce ) return next( new ErrorResponse('no matched query',404) );
             res.status(200).json( sauce );
         })
         .catch( error => next(error) );
