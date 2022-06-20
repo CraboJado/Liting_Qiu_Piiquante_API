@@ -3,7 +3,6 @@ const User = require('../models/user');
 const ErrorResponse = require('../utils/errorResponse');
 
 const auth = (req, res, next) => {
-      console.log('**************** in auth step****************');
       try {
           let token;
 
