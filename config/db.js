@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config();
-
+// const { DB_USERNAME, DB_PASSWORD, DB_CLUSTER, DB_NAME } = require('./env');
 
 const connectMongoDB = () => {
   mongoose.connect(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.dkktm.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`)

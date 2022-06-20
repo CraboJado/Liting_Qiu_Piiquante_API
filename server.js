@@ -1,10 +1,11 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const http = require('http');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const app = require('./app');
-const connectMongoDB = require('./config/db')
-const dotenv = require('dotenv');
+const connectMongoDB = require('./config/db');
 
 const normalizePort = val => {
     const port = parseInt(val, 10);
@@ -37,18 +38,16 @@ const errorHandler = error => {
     }
 };
 
-// use environment variable
-dotenv.config();
-
 // connect to mongoDB database
 connectMongoDB();
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort( process.env.PORT || '3000');
 
 app.set('port', port); 
+
 // create a server and pass express app to handle incoming request
-let server 
-if(process.env.ENVIRONNEMENT == "prod") {
+let server; 
+if( process.env.ENVIRONNEMENT == "prod") {
    server = https.createServer(
     {
     key:fs.readFileSync(path.join(__dirname,'certificate','key.pem')),
@@ -60,7 +59,7 @@ if(process.env.ENVIRONNEMENT == "prod") {
    server = http.createServer(app);
 }
 
-// handle http request event
+// handle http request event handle serve connection event ? QQ
 server.on('error',errorHandler);
 server.on('listening', () => {
     const address = server.address(); 
