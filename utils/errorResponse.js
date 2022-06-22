@@ -1,7 +1,6 @@
-//  a blueprint for error response message
 class ErrorResponse extends Error {
     constructor(message,statusCode) {
-        // call super to set the message to actual error, we send it to message
+        // call super to call the parent constructor
         super(message);
         this.statusCode = statusCode;
     }
