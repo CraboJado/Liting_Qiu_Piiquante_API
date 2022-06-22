@@ -1,10 +1,10 @@
 const ErrorResponse = require('../utils/errorResponse');
 
-//  we can do all of our error checking,error code checking,custom messages
 const errorHandler = (err, req, res, next) => {
     let error = { ...err };
-
+    
     error.message = err.message
+
     // in mongoose, 11000 means duplicate arrow key
     if(err.code === 11000) {
         const message = `Duplicate Field Value Enter`;
