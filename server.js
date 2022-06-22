@@ -59,7 +59,7 @@ if( process.env.ENVIRONNEMENT == "prod") {
    server = http.createServer(app);
 }
 
-// handle http request event handle serve connection event ? QQ
+// handle server connection event 
 server.on('error',errorHandler);
 server.on('listening', () => {
     const address = server.address(); 
