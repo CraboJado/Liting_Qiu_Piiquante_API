@@ -1,17 +1,44 @@
-## Projet réalisé individuellement pendant la formation de l'Openclassrooms : 
+# Project 6 - Piiquante
+implemented individually during training program in Openclassrooms.
+> Build a Secure API for a Review Food App.
 
-### Construisez une API sécurisée pour une application d'avis gastronomiques
+## Features
+* Signup / Login.
+* Add sauce.
+* Modify sauce/image.
+* Delete sauce.
+* Like/Unlike/Dislike sauce.
+* Logout.
 
-* Context : 
-Réalisation de la première version :
-une « galerie de sauces » permettant aux utilisateurs de télécharger leurs sauces piquantes préférées et de liker ou disliker les sauces que d'autres partagent. 
+## Piiquante Back-End
+![javascript](https://img.shields.io/badge/Javascript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
+![NodeJs](https://img.shields.io/badge/NodeJs-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-EEEEEE?style=for-the-badge&logo=express&logoColor=black)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 
-* Le front-end de l'application a été développé à l'aide d'Angular
+### Dependencies
+* bcrypt (used to encrypt the user's password)
+* dotenv (used for the management of environment variables)
+* express (MVC-like framework)
+* jsonwebtoken (used to secure connections with a token)
+* mongoose (used for MongoDB database connection and management)
+* multer (used for upload image)
 
+## Installation
 
-##### Tech Stacks : NodeJs, express, mongoose, jwt, bcrypt,multer
+## Piiquante Back-End
+Install all the dependencies with npm.\
+Open the `backend` directory in terminal :
+```bash
+npm install
+```
 
-### Lancer l'application ###
+Create folder `public/images` in `backend` directory
 
+Create file `.env` in `backend` directory
 
+In the `backend` directory, you can run:
+`npm start` to run the app server.
 
+## Piiquante Front-End
+See `README.md` in the `frontend` directory.
